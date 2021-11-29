@@ -21,6 +21,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemis(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -106,6 +107,53 @@ def mars_facts():
     
     # convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+
+
+
+
+def hemis(browser):
+    # 1. Use browser to visit the URL 
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+
+    # 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    html = browser.html
+    hemi_soup = soup(html, 'html.parser')
+    home='https://marshemispheres.com/'
+    #find where hemi info is
+    items=hemi_soup('div',class_='item')
+
+    #loop through items to pull titles and hemi page links
+    for item in items:
+        #set empty dictionary
+        hemispheres={}
+        #find titles
+        title=item.find('h3').get_text()
+        #find relative links
+        img_rel=item.find('a',class_='itemLink product-item')['href']
+        #create full link
+        hemi_link=home+img_rel
+        browser.visit(home + img_rel)
+        
+        #parse data on hemi page
+        img_html=browser.html
+        img_soup=soup(img_html,'html.parser')
+        dl=img_soup.find('div',class_='downloads')
+        img_rel=dl.find('a')['href']
+        img_url=home+img_rel
+        
+        #add data to hemisphere_image_urls list
+        hemispheres['img_url']=img_url
+        hemispheres['title']=title
+        hemisphere_image_urls.append(hemispheres)
+        browser.back()
+   
+    #return hemisphere data
+    return hemisphere_image_urls
 
 # tells flask script is complete and ready 
 #prints results of scraping to terminal
